@@ -32,10 +32,12 @@ class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
     super.initState();
     _animationController = AnimationController(
       vsync: this, // Recebe o SingleTickerProviderStateMixin
-      duration: Duration(seconds: 3),
+      duration: Duration(milliseconds: 1500),
     );
-    _animation = Tween<double>(begin: 0, end: 300).animate(
-        _animationController); // Define a faixa da animação. Que vai de 0px a 300px.
+    _animation = CurvedAnimation(
+        parent: _animationController,
+        curve: Curves
+            .elasticOut); // Define a faixa da animação. Que vai de 0px a 300px.
 
     _animation.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -60,20 +62,54 @@ class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: AnimatedLogo(_animation));
+    return Scaffold(
+      body: MyCustomTransition(
+        animation: _animation,
+        child: LogoWidget(),
+      ),
+    );
   }
 }
 
-class AnimatedLogo extends AnimatedWidget {
-  AnimatedLogo(Animation<double> animation) : super(listenable: animation);
+class LogoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final Animation<double> _animation = listenable;
+    return Container(
+      child: FlutterLogo(),
+    );
+  }
+}
+
+class MyCustomTransition extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  final sizeTween = Tween<double>(begin: 0.0, end: 300.0);
+  final opacityTween = Tween<double>(begin: 0.1, end: 1.0);
+
+  MyCustomTransition({this.animation, this.child});
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
-      child: Container(
-        height: _animation.value, // Recebendo o valor do _animation
-        width: _animation.value, // Recebendo o valor do _animation
-        child: FlutterLogo(), // Chamando a logo do Flutter
+      child: AnimatedBuilder(
+        animation: animation,
+        builder: (context, child) {
+          return Opacity(
+            opacity: opacityTween.evaluate(animation).clamp(0.0, 1.0),
+            child: Container(
+              height: 50 +
+                  sizeTween
+                      .evaluate(animation)
+                      .clamp(0.0, 500.0), // Recebendo o valor do sizeTween
+              width: sizeTween
+                  .evaluate(animation)
+                  .clamp(0.0, 500.0), // Recebendo o valor do _animation
+              child: FlutterLogo(), // Chamando a logo do Flutter
+            ),
+          );
+        },
+        child: child,
       ),
     );
   }
