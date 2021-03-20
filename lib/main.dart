@@ -37,9 +37,12 @@ class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
     _animation = Tween<double>(begin: 0, end: 300).animate(
         _animationController); // Define a faixa da animação. Que vai de 0px a 300px.
 
-    _animation.addListener(() {
-      // O estado do widget será atualizado várias vezes enquanto a animação acontecer
-      setState(() {});
+    _animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _animationController.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        _animationController.forward();
+      }
     });
 
     // A animação irá acontecer "para frente". De 0 a 300.
@@ -57,13 +60,20 @@ class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Container(
-          height: _animation.value, // Recebendo o valor do _animation
-          width: _animation.value, // Recebendo o valor do _animation
-          child: FlutterLogo(), // Chamando a logo do Flutter
-        ),
+    return Scaffold(body: AnimatedLogo(_animation));
+  }
+}
+
+class AnimatedLogo extends AnimatedWidget {
+  AnimatedLogo(Animation<double> animation) : super(listenable: animation);
+  @override
+  Widget build(BuildContext context) {
+    final Animation<double> _animation = listenable;
+    return Center(
+      child: Container(
+        height: _animation.value, // Recebendo o valor do _animation
+        width: _animation.value, // Recebendo o valor do _animation
+        child: FlutterLogo(), // Chamando a logo do Flutter
       ),
     );
   }
